@@ -672,51 +672,36 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 				display: block;
 			}
 
-			/* PROJECT ARCHITECTURE LAYOUT WRAPPERS */
-			.project-content-section {
+			/* UNIFIED PROJECTS ARCHITECTURE LAYOUT WRAPPERS */
+			.project-content-section.unified-games-section {
 				width: 100%;
-				background: #080808;
-				padding: 90px 40px;
-				box-sizing: border-box;
-				border-top: 1px solid rgba(255, 255, 255, 0.03);
-				position: relative;
-				overflow: hidden;
-			}
-
-			/* Pale Cachexia section: use a blurred background via a pseudo-element */
-			.project-content-section.pale-cachexia-section {
-				/* keep section layout but rely on ::before for the image + blur */
 				background: none;
 				padding: 90px 40px;
 				box-sizing: border-box;
 				border-top: none;
+				position: relative;
+				overflow: hidden;
 			}
-			.project-content-section.pale-cachexia-section::before {
-				content: "";
-				position: absolute;
-				inset: 0;
-				background-image: url('/blog-placeholder-5.jpg');
-				background-size: cover;
-				background-position: center;
-				filter: blur(8px) brightness(0.65) saturate(0.9);
-				transform: scale(1.05);
-				z-index: 0;
+			
+			.project-content-section.unified-games-section::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-color: #111215;
+	background-image: 
+		radial-gradient(ellipse 100% 45% at 0% 10%, rgba(138, 136, 45, 0.7) 0%, transparent 70%),
+		radial-gradient(ellipse 100% 45% at 0% 50%, rgba(171, 103, 47, 0.7) 0%, transparent 70%),
+		radial-gradient(ellipse 100% 45% at 0% 90%, rgba(146, 64, 41, 0.7) 0%, transparent 70%),
+		linear-gradient(to right, transparent 0%, #111215 90%);
+	z-index: 0;
+}
+
+			
+			.project-content-section.unified-games-section > .project-grid-container { 
+				position: relative; 
+				z-index: 1; 
 			}
-			.project-content-section.pale-cachexia-section > .project-grid-container { position: relative; z-index: 1; }
-			/* Combined Prometheus + Anoldor section background */
-			.project-content-section.prometheus-anoldor-section { background: none; padding: 40px 40px 90px 40px; }
-			.project-content-section.prometheus-anoldor-section::before {
-				content: "";
-				position: absolute;
-				inset: 0;
-				background-image: url('/blog-placeholder-4.jpg');
-				background-size: cover;
-				background-position: center;
-				filter: blur(8px) brightness(0.6) saturate(0.9);
-				transform: scale(1.05);
-				z-index: 0;
-			}
-			.project-content-section.prometheus-anoldor-section > .project-grid-container { position: relative; z-index: 1; }
+
 			.project-grid-container {
 				max-width: 1250px;
 				margin: 0 auto;
@@ -753,8 +738,6 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 				display: block;
 			}
 
-			/* specific background for the Pale Cachexia banner container */
-			/* removed individual frame background for pale cachexia; section-level background handles it */
 			.project-right-col {
 				display: flex;
 				flex-direction: column;
@@ -826,6 +809,66 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 			}
 			.store-redirect-btn.itch-theme i {
 				color: #fa5c5c;
+			}
+
+			/* COMING SOON TOOLTIP BUBBLE */
+			.coming-soon-btn {
+				position: relative;
+				overflow: visible;
+				cursor: not-allowed;
+			}
+			.coming-soon-btn::before,
+			.coming-soon-btn::after {
+				position: absolute;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+				pointer-events: none;
+				z-index: 20;
+			}
+			/* The speech bubble */
+			.coming-soon-btn::after {
+				content: "Coming Soon!";
+				bottom: calc(100% + 12px);
+				left: 50%;
+				transform: translateX(-50%) translateY(10px);
+				background: linear-gradient(135deg, #66c0f4 0%, #1b2838 100%);
+				color: #ffffff;
+				padding: 0.6rem 1rem;
+				font-family: 'Paperlogy', sans-serif;
+				font-size: 0.85rem;
+				font-weight: 500;
+				letter-spacing: 1px;
+				text-transform: none;
+				white-space: nowrap;
+				border-radius: 6px;
+				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+				border: 1px solid rgba(255, 255, 255, 0.15);
+			}
+			/* The little downward triangle */
+			.coming-soon-btn::before {
+				content: "";
+				bottom: calc(100% + 4px);
+				left: 50%;
+				transform: translateX(-50%) translateY(10px);
+				border-width: 6px;
+				border-style: solid;
+				border-color: #1b2838 transparent transparent transparent;
+			}
+			.coming-soon-btn:hover::after,
+			.coming-soon-btn:hover::before {
+				opacity: 1;
+				visibility: visible;
+				transform: translateX(-50%) translateY(0);
+			}
+			
+			/* Itch.io specific Bubble Overrides */
+			.coming-soon-btn.itch-theme::after {
+				background: linear-gradient(135deg, #fa5c5c 0%, #2b1616 100%);
+				border: 1px solid rgba(250, 92, 92, 0.3);
+			}
+			.coming-soon-btn.itch-theme::before {
+				border-color: #2b1616 transparent transparent transparent;
 			}
 
 			@keyframes scroll {
@@ -1284,23 +1327,59 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 		</section>
 
 		<!-- 2. RECENT WORKS BANNER MAPPED TO KEYBOARD.JPEG -->
-		<div class="carousel-header-bg" style="background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(5, 5, 5, 1)), url('/keyboard.jpeg');">
-			<div class="carousel-title-box">
-				<h2 class="carousel-section-title">Recent Works & Current Projects</h2>
-			</div>
-		</div>
+<div class="carousel-header-bg" style="background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(5, 5, 5, 1)), url('/keyboard.jpeg'); background-position: center top;">
+	<div class="carousel-title-box">
+		<h2 class="carousel-section-title">Recent Works & Current Projects</h2>
+	</div>
+</div>
+
 		
-		<!-- TWO-COLUMN AREA FEATURING PALE CACHEXIA OVERVIEW -->
-		<section class="project-content-section pale-cachexia-section">
+		<!-- UNIFIED GAME PROJECTS BLOCK -->
+		<section class="project-content-section unified-games-section">
+			
+			<!-- GAME 1: LIGHTHOUSE -->
 			<div class="project-grid-container">
-				<!-- Left Column: Hoverable Poster Image (3. Updated to Pal Cachexia Banner.jpeg) -->
 				<div class="project-left-col">
-					<div class="project-image-frame pale-cachexia">
-						<img src="/Pale Cachexia Banner.jpeg" alt="Pale Cachexia Artwork"
-						style="width: 100%; height: auto; max-height: 500px; display: block; border-radius: 8px;" />
+					<div class="project-image-frame purple-border">
+						<img src="/Lighthouse Temp.jpg" alt="Lighthouse" />
 					</div>
 				</div>
-				<!-- Right Column: Formatted Text Description & Steam Button -->
+				<div class="project-right-col">
+					<h3 class="project-header-title">Lighthouse</h3>
+					<p class="project-description-paragraph">
+						Trapped inside a scientific anomaly, solve puzzles with evolving teleportation tech and uncover the fate of the vanished “keepers”. Built alongside our community, props we made for Project Lighthouse are free for other game developers.
+					</p>
+					<a href="#" onclick="return false;" class="store-redirect-btn coming-soon-btn">
+						<i class="fa-brands fa-steam"></i> Steam
+					</a>
+				</div>
+			</div>
+
+			<!-- GAME 2: CORAL GABLES -->
+			<div class="project-grid-container" style="margin-top: 48px; padding-top: 48px;">
+				<div class="project-left-col">
+					<div class="project-image-frame purple-border">
+						<img src="/Coral Gables Title.jpg" alt="Coral Gables" />
+					</div>
+				</div>
+				<div class="project-right-col">
+					<h3 class="project-header-title">Coral Gables</h3>
+					<p class="project-description-paragraph">
+						Step into the sun-soaked streets of Coral Gables, Florida, and uncover the charm of the "City Beautiful." Explore lush gardens, historic landmarks, scenic canals, and vibrant neighborhoods as you complete quests, solve environmental puzzles, and discover hidden local stories. Whether you're photographing iconic architecture, finding secret pathways, or helping residents with community challenges, every adventure reveals another piece of Coral Gables' rich culture and history in this relaxing exploration game.
+					</p>
+					<a href="#" onclick="return false;" class="store-redirect-btn coming-soon-btn">
+						<i class="fa-brands fa-steam"></i> Steam
+					</a>
+				</div>
+			</div>
+
+			<!-- GAME 3: PALE CACHEXIA -->
+			<div class="project-grid-container" style="margin-top: 48px; padding-top: 48px;">
+				<div class="project-left-col">
+					<div class="project-image-frame pale-cachexia">
+						<img src="/Pale Cachexia Banner.jpeg" alt="Pale Cachexia Artwork" style="width: 100%; height: auto; max-height: 500px; display: block; border-radius: 8px;" />
+					</div>
+				</div>
 				<div class="project-right-col">
 					<h3 class="project-header-title">Pale Cachexia (2021)</h3>
 					<p class="project-description-paragraph">
@@ -1309,31 +1388,19 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 						But when Esther meets Seina, who lives all alone in a towering manor, the two girls are drawn to each other in a tale of friendship, sorrow, and bitter loneliness. 
 						Their story is shadowed by the dark secrets of the manor and its graveyard, which haunts Esther even in her deepest dreams.
 					</p>
-					<!-- 4. Removed "Buy On" From Button Display -->
 					<a href="https://store.steampowered.com/app/847680/Pale_Cachexia/" target="_blank" class="store-redirect-btn">
 						<i class="fa-brands fa-steam"></i> Steam
 					</a>
 				</div>
 			</div>
-		</section>
-
-		<!-- 5. NEW SECTION: IN DEVELOPMENT HEADER BANNER -->
-		<div class="carousel-header-bg" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(5, 5, 5, 1)); background-color: #0c0c0c;">
-			<div class="carousel-title-box">
-				<h2 class="carousel-section-title">In Development</h2>
-			</div>
-		</div>
-
-		<!-- 6-7. PROMETHEUS + ANOLDOR COMBINED BLOCK -->
-		<section class="project-content-section prometheus-anoldor-section" style="border-top: none; padding-top: 40px;">
-			<div class="project-grid-container">
-				<!-- Left Column: Prometheus Hoverable Image -->
+			
+			<!-- GAME 4: PROMETHEUS -->
+			<div class="project-grid-container" style="margin-top: 48px; padding-top: 48px;">
 				<div class="project-left-col">
 					<div class="project-image-frame purple-border">
 						<img src="/prometheus.jpeg" alt="PROMETHEUS: Omex Rising" />
 					</div>
 				</div>
-				<!-- Right Column: Info & Action Callout -->
 				<div class="project-right-col">
 					<h3 class="project-header-title">PROMΞTHΞUS: Omex Rising</h3>
 					<p class="project-description-paragraph">
@@ -1345,20 +1412,19 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 				</div>
 			</div>
 
+			<!-- GAME 5: ANOLDOR -->
 			<div class="project-grid-container" style="margin-top: 48px; padding-top: 48px;">
-				<!-- Left Column: Anoldor Hoverable Image -->
 				<div class="project-left-col">
 					<div class="project-image-frame purple-border">
 						<img src="/anoldor.jpg" alt="ANOLDOR" />
 					</div>
 				</div>
-				<!-- Right Column: Info & Itch.io Action Callout -->
 				<div class="project-right-col">
 					<h3 class="project-header-title">ANOLDOR</h3>
 					<p class="project-description-paragraph">
 						As the 31st Chosen One of Anoldor, rule over your country, negotiate with gods, tame magick and forge the destiny of your people as much as your own. Having so many lives to protect and guide during this time of political chaos is a heavy burden, but you don’t have to carry it alone. You may rely on your friends and true love, as long you don’t mistake your enemies for your allies…
 					</p>
-					<a href="https://anoldor.itch.io/anoldor" target="_blank" class="store-redirect-btn itch-theme">
+					<a href="#" onclick="return false;" class="store-redirect-btn itch-theme coming-soon-btn">
 						<i class="fa-solid fa-gamepad"></i> Itch.io
 					</a>
 				</div>
@@ -1449,8 +1515,6 @@ const SITE_DESCRIPTION = "Composer & Score Supervisor Portfolio";
 		</div>
 		<div style="opacity:0.9; font-size:0.95rem;">Prefer quick links? Find me on <a href="https://www.imdb.com/name/nm8105113/" target="_blank" style="color:inherit; text-decoration:underline;">IMDb</a>, <a href="https://www.instagram.com/doraymekim/" target="_blank" style="color:inherit; text-decoration:underline;">Instagram</a>, and <a href="https://open.spotify.com/artist/1JHFQv8E0HG7mmKpuftPLB" target="_blank" style="color:inherit; text-decoration:underline;">Spotify</a>.</div>
 	</div>
-</section>
-
 </section>
 
 			<!-- Floating social bar (fixed center, follows scroll) -->
