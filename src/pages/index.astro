@@ -1535,6 +1535,31 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 					.contact-panel .back-to-top { position: absolute; right: 18px; top: 18px; background: rgba(255,255,255,0.06); color: #fff; padding:12px 14px; border-radius:8px; text-decoration:none; font-size:1.05rem; font-weight:600; border:1px solid rgba(255,255,255,0.08); box-shadow: 0 6px 18px rgba(0,0,0,0.45); transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
 					.contact-panel .back-to-top:hover { transform: translateY(-3px); background: rgba(255,255,255,0.12); box-shadow: 0 10px 26px rgba(0,0,0,0.5); }
 				</style>
+<style is:global>
+/* ---- site animations: hero entrance, poster hover, waveform dividers ---- */
+@keyframes heroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero-name{animation:heroIn .9s ease .15s both}
+.site-title{animation:heroIn .9s ease .35s both}
+.poster-card{transition:transform .32s cubic-bezier(.22,.61,.36,1),box-shadow .32s ease}
+.poster-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 14px 34px rgba(0,0,0,.38);z-index:2}
+/* waveform: bars (Features & Series) */
+.wave-divider{display:flex;align-items:flex-end;justify-content:center;gap:5px;height:44px;margin:10px auto;opacity:.55}
+.wave-divider span{width:3px;border-radius:2px;background:currentColor;animation:wavePulse 1.6s ease-in-out infinite}
+@keyframes wavePulse{0%,100%{height:22%}50%{height:100%}}
+/* waveform: dots (Orchestration) */
+.waveform-dots{display:flex;align-items:center;justify-content:center;gap:10px;height:44px;margin:10px auto;opacity:.6}
+.waveform-dots span{width:6px;height:6px;border-radius:50%;background:currentColor;animation:dotBounce 1.7s ease-in-out infinite}
+@keyframes dotBounce{0%,100%{transform:translateY(9px);opacity:.4}50%{transform:translateY(-9px);opacity:1}}
+/* waveform: mirrored (video games) */
+.waveform-mirror{display:flex;align-items:center;justify-content:center;gap:5px;height:58px;margin:10px auto;opacity:.55}
+.waveform-mirror span{width:3px;border-radius:2px;background:currentColor;animation:mirrorPulse 1.9s ease-in-out infinite}
+@keyframes mirrorPulse{0%,100%{height:12%}50%{height:96%}}
+@media (prefers-reduced-motion:reduce){
+  .hero-name,.site-title{animation:none}
+  .poster-card{transition:none}
+  .wave-divider span,.waveform-dots span,.waveform-mirror span{animation:none}
+}
+</style>
 				<div class="fsb-inner">
 					<a class="fsb-imdb" href="https://www.imdb.com/name/nm8105113/" target="_blank" aria-label="IMDb"><i class="fa-brands fa-imdb"></i></a>
 					<a class="fsb-instagram" href="https://www.instagram.com/doraymekim/" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
@@ -1697,5 +1722,31 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 		  });
 	})();
 	</script>
-	</body>
+	<script>
+(function(){
+  // animated waveform dividers (always visible, CSS-only motion)
+  function makeWave(cls, n, styler){
+    var d = document.createElement('div');
+    d.className = cls; d.setAttribute('aria-hidden','true');
+    var html = '';
+    for (var i = 0; i < n; i++) html += styler(i);
+    d.innerHTML = html;
+    return d;
+  }
+  function insertBefore(target, el){ if (target) target.parentNode.insertBefore(el, target); }
+  var heights = [42,68,88,60,95,74,50,82,64,92,55,78,46,70,86,58,94,66,48,80,62,90,52,76];
+  var carousels = document.querySelectorAll('.carousel-section');
+  insertBefore(carousels[0], makeWave('wave-divider', heights.length, function(i){
+    return '<span style="height:'+heights[i]+'%;animation-delay:'+(i*0.09).toFixed(2)+'s"></span>';
+  }));
+  var orchTrack = document.getElementById('orchCarouselTrack');
+  insertBefore(orchTrack ? orchTrack.closest('.carousel-section') : carousels[1], makeWave('waveform-dots', 18, function(i){
+    return '<span style="animation-delay:'+(i*0.11).toFixed(2)+'s"></span>';
+  }));
+  insertBefore(document.querySelector('.project-content-section.unified-games-section'), makeWave('waveform-mirror', heights.length, function(i){
+    return '<span style="height:'+heights[(i*7)%heights.length]+'%;animation-delay:'+(i*0.08).toFixed(2)+'s"></span>';
+  }));
+})();
+</script>
+</body>
 </html>
