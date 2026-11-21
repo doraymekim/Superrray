@@ -350,6 +350,15 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 				animation: scroll 122.2s linear infinite;
 				touch-action: pan-y;
 				will-change: transform;
+				cursor: grab;
+			}
+
+			/* while a fling is in progress the track (and its cards) show a grabbing hand */
+			.carousel-track.dragging,
+			.carousel-track.dragging * {
+				cursor: grabbing !important;
+				user-select: none;
+				-webkit-user-select: none;
 			}
 			
 			#orchCarouselTrack {
@@ -1681,12 +1690,16 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 			}
 		</script>
 		<script>
-		// JS-driven infinite carousel with drag inertia for #carouselTrack and #orchCarouselTrack
+		// JS-driven infinite carousel with click-and-fling for #carouselTrack and #orchCarouselTrack
 		(function(){
 		  const ids = ['carouselTrack','orchCarouselTrack'];
 		  ids.forEach(id => {
 		    const track = document.getElementById(id);
 		    if (!track) return;
+
+		    // JS owns the motion now: the CSS `scroll` animation would override
+		    // inline transforms, so it has to go (the old JS loop was silently dead).
+		    track.style.animation = 'none';
 
 		    // duplicate contents for seamless looping
 		    const originalHTML = track.innerHTML;
@@ -1696,12 +1709,15 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 		    const halfCount = children.length / 2;
 
 		    const computeContentWidth = () => {
+		      // one seamless half = first-half cards + the flex gaps between them
+		      // (including the gap where the first half meets its duplicate)
+		      const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || 0) || 0;
 		      let w = 0;
 		      for (let i = 0; i < halfCount; i++) {
 		        const el = children[i];
 		        const style = getComputedStyle(el);
 		        const mr = parseFloat(style.marginRight || 0);
-		        w += el.offsetWidth + mr;
+		        w += el.offsetWidth + mr + gap;
 		      }
 		      return w;
 		    };
@@ -1710,30 +1726,146 @@ const SITE_DESCRIPTION = "Film & Game Composer";
 		    let x = 0; // current translateX
 		    const autoSpeed = 0.03; // px per ms (30px/s)
 		    let lastTime = performance.now();
-		    let rafId = null;
 
-			// ensure no CSS auto animation interferes
+		    // --- fling state ---
+		    let dragging = false;
+		    let activePointerId = null;
+		    let lastPointerX = 0;
+		    let dragDistance = 0;
+		    let velocity = 0; // px per ms, from recent pointer movement
+		    let samples = []; // [{t, x}] recent pointer samples for release velocity
+		    let flinging = false;
+		    let hovering = false;
+		    let resumeAt = 0; // timestamp when auto-scroll may resume
+		    let suppressClick = false;
+
+		    const FRICTION = 0.94; // velocity retained per frame (~60fps)
+		    const MAX_VELOCITY = 4; // px per ms cap
+		    const CLICK_THRESHOLD = 6; // px — below this, it's a click, not a drag
+		    const RESUME_DELAY = 2000; // ms after a fling settles before auto-scroll resumes
+
+		    // keep x in [-contentWidth, 0): the duplicated halves make the wrap invisible
+		    const wrap = () => {
+		      while (x <= -contentWidth) x += contentWidth;
+		      while (x >= 0) x -= contentWidth;
+		    };
+
+		    const applyTransform = () => { track.style.transform = `translateX(${x}px)`; };
+
 			track.style.willChange = 'transform';
 
 			function step(now) {
-			  const dt = Math.max(1, now - lastTime);
+			  const dt = Math.min(50, Math.max(1, now - lastTime)); // clamp so a backgrounded tab can't jump the track on return
 			  lastTime = now;
 
-			  x -= autoSpeed * dt;
+			  if (dragging) {
+			    // x is set directly by pointermove
+			  } else if (flinging) {
+			    x += velocity * dt;
+			    velocity *= Math.pow(FRICTION, dt / 16.667);
+			    if (Math.abs(velocity) < 0.02) {
+			      flinging = false;
+			      velocity = 0;
+			      resumeAt = now + RESUME_DELAY;
+			    }
+			  } else if (!hovering && now >= resumeAt) {
+			    x -= autoSpeed * dt;
+			  }
 
-			  if (x <= -contentWidth) x += contentWidth;
-			  if (x >= 0) x -= contentWidth;
-
-			  track.style.transform = `translateX(${x}px)`;
-			  rafId = requestAnimationFrame(step);
+			  wrap();
+			  applyTransform();
+			  requestAnimationFrame(step);
 			}
 
-			rafId = requestAnimationFrame(step);
+			requestAnimationFrame(step);
+
+			// --- pointer handling: grab, drag, fling ---
+			track.addEventListener('pointerdown', (e) => {
+			  if (dragging) return; // one pointer at a time
+			  dragging = true;
+			  flinging = false;
+			  velocity = 0;
+			  activePointerId = e.pointerId;
+			  lastPointerX = e.clientX;
+			  dragDistance = 0;
+			  samples = [{ t: performance.now(), x: e.clientX }];
+			  try { track.setPointerCapture(e.pointerId); } catch (err) { /* capture unavailable; drag still works while the pointer stays over the track */ }
+			  track.classList.add('dragging');
+			  resumeAt = 0;
+			});
+
+			track.addEventListener('pointermove', (e) => {
+			  if (!dragging || e.pointerId !== activePointerId) return;
+			  const dx = e.clientX - lastPointerX;
+			  lastPointerX = e.clientX;
+			  x += dx;
+			  dragDistance += Math.abs(dx);
+			  const now = performance.now();
+			  samples.push({ t: now, x: e.clientX });
+			  while (samples.length > 1 && now - samples[0].t > 100) samples.shift();
+			  wrap();
+			  applyTransform();
+			});
+
+			const endDrag = (e) => {
+			  if (!dragging || e.pointerId !== activePointerId) return;
+			  dragging = false;
+			  track.classList.remove('dragging');
+			  const now = performance.now();
+			  if (samples.length > 1) {
+			    const first = samples[0];
+			    const last = samples[samples.length - 1];
+			    const dt = Math.max(1, last.t - first.t);
+			    velocity = (last.x - first.x) / dt;
+			    velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocity));
+			  }
+			  if (dragDistance > CLICK_THRESHOLD) {
+			    suppressClick = true;
+			    setTimeout(() => { suppressClick = false; }, 50);
+			  }
+			  if (Math.abs(velocity) > 0.05) {
+			    flinging = true;
+			  } else {
+			    velocity = 0;
+			    resumeAt = now + RESUME_DELAY;
+			  }
+			};
+
+			track.addEventListener('pointerup', endDrag);
+			track.addEventListener('pointercancel', endDrag);
+
+			// a drag must not open the poster's IMDb link
+			track.addEventListener('click', (e) => {
+			  if (suppressClick) {
+			    e.preventDefault();
+			    e.stopPropagation();
+			    suppressClick = false;
+			  }
+			}, true);
+
+			// don't let the browser start a native image drag
+			track.addEventListener('dragstart', (e) => e.preventDefault());
+
+			// preserve the old CSS hover-pause: hovering stops the auto-scroll (mouse only,
+			// so a tap on touch screens can't stall it)
+			const container = track.parentElement;
+			if (container) {
+			  container.addEventListener('pointerover', (e) => {
+			    if (e.pointerType === 'mouse') hovering = true;
+			  });
+			  container.addEventListener('pointerout', (e) => {
+			    if (e.pointerType !== 'mouse') return;
+			    if (!container.contains(e.relatedTarget)) {
+			      hovering = false;
+			      if (!flinging && !dragging) resumeAt = performance.now() + 500;
+			    }
+			  });
+			}
 
 			// recompute contentWidth on resize
 			window.addEventListener('resize', () => { contentWidth = computeContentWidth(); });
 		  });
-	})();
+		})();
 	</script>
 	<script>
 (function(){
